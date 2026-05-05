@@ -120,6 +120,22 @@ class FraudDetectionEngine:
             risk_score += 0.25
             reasons.append("Stock mismatch: requesting more than available")
 
+        # Rule 5: Suspicious pattern - unusual time gaps (transaction after long gap)
+        if user_history and len(user_history) > 1:
+            time_gaps = []
+            for i in range(len(user_history) - 1):
+                gap = (user_history[i].get('timestamp', datetime.utcnow()) - 
+                       user_history[i+1].get('timestamp', datetime.utcnow())).total_seconds() / 3600
+                time_gaps.append(gap)
+            
+            if time_gaps:
+                avg_gap = sum(time_gaps) / len(time_gaps)
+                current_gap = transaction_data.get('time_gap_hours', avg_gap)
+                # If current gap is significantly different from average, flag it
+                if avg_gap > 0 and abs(current_gap - avg_gap) > avg_gap * 2:
+                    risk_score += 0.15
+                    reasons.append(f"Unusual time gap pattern: {current_gap:.1f}h vs avg {avg_gap:.1f}h")
+
         return min(risk_score, 1.0), " | ".join(reasons) if reasons else "No rule violations"
 
     def predict_fraud(self, transaction_data: Dict, 

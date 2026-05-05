@@ -15,6 +15,10 @@ from utils.auth_utils import get_token_from_request, verify_access_token
 
 transactions_bp = Blueprint('transactions', __name__)
 
+# QUOTA ENFORCEMENT: Maximum monthly distribution quota per beneficiary
+MAX_MONTHLY_QUOTA = 50  # kg per month
+QUOTA_ENFORCEMENT_ENABLED = True
+
 
 def require_auth(func):
     """Decorator to verify authentication token"""
@@ -49,7 +53,7 @@ def get_fraud_detector():
 @require_auth
 def distribute_goods():
     """
-    Distribute goods to beneficiary
+    Distribute goods to beneficiary with quota and fraud detection
     
     Expected JSON:
     {
@@ -85,14 +89,42 @@ def distribute_goods():
 
         quantity = float(data['quantity'])
 
-        # Check stock availability
+        # CRITICAL FIX #4: Check stock availability
         if shop.current_stock < quantity:
             db.close()
             return jsonify({
                 'error': 'Insufficient stock',
                 'available': shop.current_stock,
-                'requested': quantity
+                'requested': quantity,
+                'shortage': quantity - shop.current_stock
             }), 400
+
+        # CRITICAL FIX #5: Check monthly quota enforcement
+        if QUOTA_ENFORCEMENT_ENABLED:
+            # Calculate current month range
+            today = datetime.utcnow()
+            month_start = today.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
+            
+            # Get total quantity received this month
+            monthly_transactions = db.query(BeneficiaryTransaction).filter(
+                BeneficiaryTransaction.user_id == data['user_id'],
+                BeneficiaryTransaction.timestamp >= month_start
+            ).all()
+            
+            total_received_this_month = sum(t.quantity for t in monthly_transactions)
+            
+            # Check if adding this distribution exceeds monthly quota
+            if total_received_this_month + quantity > MAX_MONTHLY_QUOTA:
+                remaining_quota = MAX_MONTHLY_QUOTA - total_received_this_month
+                db.close()
+                return jsonify({
+                    'error': 'Monthly quota exceeded',
+                    'quota_limit': MAX_MONTHLY_QUOTA,
+                    'received_this_month': total_received_this_month,
+                    'remaining_quota': remaining_quota,
+                    'requested': quantity,
+                    'message': f'Beneficiary can only receive {remaining_quota}kg more this month'
+                }), 400
 
         # Get user transaction history for fraud detection
         user_history = db.query(BeneficiaryTransaction).filter(
@@ -125,7 +157,8 @@ def distribute_goods():
         fraud_risk = {
             'is_fraud': False,
             'risk_score': 0.0,
-            'reason': 'No fraud detector available'
+            'reason': 'No fraud detector available',
+            'is_anomaly': 0
         }
 
         if fraud_detector:
@@ -164,22 +197,34 @@ def distribute_goods():
             )
             db.add(fraud_alert)
 
-        # Update shop stock
+        # CRITICAL FIX #6: Update shop stock atomically
         shop.current_stock -= quantity
 
         db.commit()
         txn_id = beneficiary_txn.id
+        
+        # Calculate remaining quota after this transaction
+        total_received_this_month = sum(t.quantity for t in monthly_transactions) + quantity if QUOTA_ENFORCEMENT_ENABLED else 0
+        remaining_quota = MAX_MONTHLY_QUOTA - total_received_this_month if QUOTA_ENFORCEMENT_ENABLED else -1
+        
         db.close()
 
         return jsonify({
-            'message': 'Distribution completed',
+            'message': 'Distribution completed successfully',
             'transaction_id': txn_id,
             'user_id': data['user_id'],
+            'user_name': user.name,
             'shop_id': data['shop_id'],
             'quantity': quantity,
+            'shop_remaining_stock': shop.current_stock,
+            'quota_info': {
+                'monthly_limit': MAX_MONTHLY_QUOTA,
+                'received_this_month': total_received_this_month,
+                'remaining_quota': remaining_quota
+            },
             'fraud_risk': {
                 'is_fraud': fraud_risk['is_fraud'],
-                'risk_score': fraud_risk['risk_score'],
+                'risk_score': round(fraud_risk['risk_score'], 3),
                 'reason': fraud_risk['reason'],
                 'confidence': fraud_risk.get('confidence', 'low')
             }
@@ -272,6 +317,65 @@ def user_transaction_history(user_id):
                 }
                 for t in transactions
             ]
+        }), 200
+
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+
+@transactions_bp.route('/user/<int:user_id>/quota', methods=['GET'])
+@require_auth
+def get_beneficiary_quota(user_id):
+    """
+    Get monthly quota status for a beneficiary
+    
+    Returns:
+    - Monthly limit
+    - Amount received this month
+    - Remaining quota
+    """
+    try:
+        db: Session = SessionLocal()
+        
+        # Verify user exists
+        user = db.query(User).filter(User.id == user_id).first()
+        if not user:
+            db.close()
+            return jsonify({'error': 'User not found'}), 404
+
+        if user.role != UserRole.BENEFICIARY:
+            db.close()
+            return jsonify({'error': 'Only beneficiaries have quotas'}), 403
+
+        # Calculate current month range
+        today = datetime.utcnow()
+        month_start = today.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
+        
+        # Get total quantity received this month
+        monthly_transactions = db.query(BeneficiaryTransaction).filter(
+            BeneficiaryTransaction.user_id == user_id,
+            BeneficiaryTransaction.timestamp >= month_start
+        ).all()
+        
+        total_received_this_month = sum(t.quantity for t in monthly_transactions)
+        remaining_quota = MAX_MONTHLY_QUOTA - total_received_this_month
+        percentage_used = (total_received_this_month / MAX_MONTHLY_QUOTA * 100) if MAX_MONTHLY_QUOTA > 0 else 0
+
+        db.close()
+
+        return jsonify({
+            'user_id': user_id,
+            'user_name': user.name,
+            'monthly_limit': MAX_MONTHLY_QUOTA,
+            'received_this_month': round(total_received_this_month, 2),
+            'remaining_quota': round(max(0, remaining_quota), 2),
+            'percentage_used': round(percentage_used, 1),
+            'quota_enforcement_enabled': QUOTA_ENFORCEMENT_ENABLED,
+            'month': {
+                'start': month_start.isoformat(),
+                'current': today.isoformat()
+            },
+            'transactions_this_month': len(monthly_transactions)
         }), 200
 
     except Exception as e:

@@ -5,35 +5,272 @@
 {% block content %}
 <div class="row mb-4">
     <div class="col-12">
-        <h2><i class="fas fa-user"></i> Beneficiary Portal</h2>
-        <p class="text-muted">Track your distributions and manage grievances</p>
+        <h2><i class="fas fa-user"></i> <span id="beneficiary-name">Beneficiary Portal</span></h2>
+        <p class="text-muted">ID: <code id="beneficiary-id">-</code></p>
     </div>
 </div>
 
 <!-- Quick Stats -->
 <div class="row mb-4">
-    <div class="col-lg-4 col-md-6">
+    <div class="col-lg-3 col-md-6">
         <div class="stat-box">
             <i class="fas fa-box" style="font-size: 2rem; color: var(--secondary-color);"></i>
             <div class="number" id="total-received">0</div>
             <div class="label">Total Received (kg)</div>
         </div>
     </div>
-    <div class="col-lg-4 col-md-6">
+    <div class="col-lg-3 col-md-6">
         <div class="stat-box">
             <i class="fas fa-calendar-check" style="font-size: 2rem; color: var(--success-color);"></i>
             <div class="number" id="total-distributions">0</div>
             <div class="label">Distributions</div>
         </div>
     </div>
-    <div class="col-lg-4 col-md-6">
+    <div class="col-lg-3 col-md-6">
         <div class="stat-box">
             <i class="fas fa-comment-dots" style="font-size: 2rem; color: var(--warning-color);"></i>
             <div class="number" id="grievance-count">0</div>
             <div class="label">Grievances</div>
         </div>
     </div>
+    <div class="col-lg-3 col-md-6">
+        <div class="stat-box">
+            <i class="fas fa-chart-pie" style="font-size: 2rem; color: #e74c3c;"></i>
+            <div class="number" id="quota-remaining">0%</div>
+            <div class="label">Quota Remaining</div>
+        </div>
+    </div>
 </div>
+
+<!-- Quota Information Card -->
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card border-primary">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0"><i class="fas fa-tasks"></i> Monthly Distribution Quota</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <p><strong>Monthly Limit:</strong> <span id="quota-limit">0</span> kg</p>
+                        <p><strong>Received This Month:</strong> <span id="quota-received">0</span> kg</p>
+                        <p><strong>Remaining:</strong> <span id="quota-left">0</span> kg</p>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="progress" style="height: 25px;">
+                            <div id="quota-progress-bar" class="progress-bar bg-success" role="progressbar" style="width: 0%" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100">
+                                <span id="quota-percentage">0%</span>
+                            </div>
+                        </div>
+                        <small class="text-muted" id="quota-message">Loading...</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Distribution History -->
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="fas fa-history"></i> Distribution History</h5>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Date</th>
+                                <th>Shop</th>
+                                <th>Quantity (kg)</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody id="history-table">
+                            <tr><td colspan="4" class="text-center text-muted">Loading...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Grievances Section -->
+<div class="row">
+    <div class="col-lg-6">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="fas fa-file-alt"></i> File Grievance</h5>
+            </div>
+            <div class="card-body">
+                <form id="grievanceForm">
+                    <div class="mb-3">
+                        <label for="grievance_desc" class="form-label">Description</label>
+                        <textarea class="form-control" id="grievance_desc" rows="4" placeholder="Describe your issue..." required></textarea>
+                    </div>
+                    <button type="submit" class="btn btn-primary w-100">
+                        <i class="fas fa-paper-plane"></i> Submit Grievance
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-6">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="fas fa-list"></i> My Grievances</h5>
+            </div>
+            <div class="card-body">
+                <div id="grievances-list">
+                    <p class="text-muted">Loading grievances...</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    const API_URL = 'http://localhost:5000/api';
+    const token = localStorage.getItem('token');
+    const userId = localStorage.getItem('user_id');
+    const userName = localStorage.getItem('user_name');
+
+    // Display user info
+    document.getElementById('beneficiary-name').textContent = userName || 'Beneficiary Portal';
+    document.getElementById('beneficiary-id').textContent = localStorage.getItem('unique_id') || userId;
+
+    function loadBeneficiaryData() {
+        // Load quota information
+        fetch(`${API_URL}/transactions/user/${userId}/quota`, {
+            headers: { 'Authorization': `Bearer ${token}` }
+        })
+        .then(r => r.json())
+        .then(data => {
+            document.getElementById('quota-limit').textContent = data.monthly_limit;
+            document.getElementById('quota-received').textContent = data.received_this_month.toFixed(1);
+            document.getElementById('quota-left').textContent = data.remaining_quota.toFixed(1);
+            document.getElementById('quota-remaining').textContent = (100 - data.percentage_used).toFixed(0) + '%';
+            document.getElementById('quota-percentage').textContent = data.percentage_used.toFixed(0) + '%';
+            
+            // Update progress bar
+            const progressBar = document.getElementById('quota-progress-bar');
+            progressBar.style.width = data.percentage_used + '%';
+            
+            // Change color based on usage
+            if (data.percentage_used > 90) {
+                progressBar.classList.remove('bg-success', 'bg-warning');
+                progressBar.classList.add('bg-danger');
+                document.getElementById('quota-message').textContent = '⚠️ You have used ' + data.percentage_used.toFixed(1) + '% of your monthly quota!';
+            } else if (data.percentage_used > 70) {
+                progressBar.classList.remove('bg-success', 'bg-danger');
+                progressBar.classList.add('bg-warning');
+                document.getElementById('quota-message').textContent = 'You have used ' + data.percentage_used.toFixed(1) + '% of your monthly quota.';
+            } else {
+                progressBar.classList.remove('bg-warning', 'bg-danger');
+                progressBar.classList.add('bg-success');
+                document.getElementById('quota-message').textContent = 'You can receive ' + data.remaining_quota.toFixed(1) + 'kg more this month.';
+            }
+        });
+
+        // Load transaction history
+        fetch(`${API_URL}/transactions/user/${userId}/history`, {
+            headers: { 'Authorization': `Bearer ${token}` }
+        })
+        .then(r => r.json())
+        .then(data => {
+            document.getElementById('total-received').textContent = data.total_quantity.toFixed(1);
+            document.getElementById('total-distributions').textContent = data.count;
+
+            let html = '';
+            if (data.transactions.length === 0) {
+                html = '<tr><td colspan="4" class="text-center text-muted">No distributions yet</td></tr>';
+            } else {
+                data.transactions.forEach(txn => {
+                    html += `
+                        <tr>
+                            <td>${new Date(txn.timestamp).toLocaleDateString()}</td>
+                            <td>Shop #${txn.shop_id}</td>
+                            <td>${txn.quantity} kg</td>
+                            <td><span class="badge bg-success">Completed</span></td>
+                        </tr>
+                    `;
+                });
+            }
+            document.getElementById('history-table').innerHTML = html;
+        });
+
+        // Load grievances
+        loadGrievances();
+    }
+
+    function loadGrievances() {
+        fetch(`${API_URL}/grievance/all`, {
+            headers: { 'Authorization': `Bearer ${token}` }
+        })
+        .then(r => r.json())
+        .then(data => {
+            document.getElementById('grievance-count').textContent = data.count;
+
+            let html = '';
+            if (data.grievances.length === 0) {
+                html = '<p class="text-muted">No grievances filed</p>';
+            } else {
+                data.grievances.forEach(g => {
+                    const statusClass = g.status === 'open' ? 'danger' : 
+                                       g.status === 'resolved' ? 'success' : 'secondary';
+                    html += `
+                        <div class="alert alert-light border mb-2">
+                            <div class="d-flex justify-content-between align-items-start">
+                                <div>
+                                    <h6 class="mb-1">Grievance #${g.id}</h6>
+                                    <p class="mb-1 small">${g.description}</p>
+                                    <small class="text-muted">${new Date(g.created_at).toLocaleDateString()}</small>
+                                </div>
+                                <span class="badge bg-${statusClass}">${g.status}</span>
+                            </div>
+                        </div>
+                    `;
+                });
+            }
+            document.getElementById('grievances-list').innerHTML = html;
+        });
+    }
+
+    // Submit grievance
+    document.getElementById('grievanceForm').addEventListener('submit', function(e) {
+        e.preventDefault();
+        
+        fetch(`${API_URL}/grievance`, {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${token}`,
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                user_id: parseInt(userId),
+                description: document.getElementById('grievance_desc').value
+            })
+        })
+        .then(r => r.json())
+        .then(data => {
+            if (data.message) {
+                alert('Grievance submitted successfully!');
+                document.getElementById('grievanceForm').reset();
+                loadGrievances();
+            } else {
+                alert('Error: ' + (data.error || 'Unknown error'));
+            }
+        });
+    });
+
+    loadBeneficiaryData();
+    setInterval(loadBeneficiaryData, 60000); // Refresh every minute
+</script>
+{% endblock %}
 
 <!-- Distribution History -->
 <div class="row mb-4">

@@ -90,7 +90,7 @@ def create_grievance():
 @require_auth
 def get_grievances():
     """
-    Get grievances
+    Get grievances with user information
     
     Query parameters:
     - user_id: filter by user
@@ -104,7 +104,7 @@ def get_grievances():
 
         db: Session = SessionLocal()
         
-        query = db.query(Grievance)
+        query = db.query(Grievance).join(User, Grievance.user_id == User.id)
 
         # Users can only see their own grievances unless admin
         if request.user_role != 'admin':
@@ -127,6 +127,7 @@ def get_grievances():
                 {
                     'id': g.id,
                     'user_id': g.user_id,
+                    'user_name': g.user.name if g.user else 'Unknown',
                     'description': g.description,
                     'status': g.status,
                     'created_at': g.created_at.isoformat(),

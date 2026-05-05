@@ -43,6 +43,7 @@ class Warehouse(Base):
     id = Column(Integer, primary_key=True)
     name = Column(String(150), nullable=False)
     location = Column(String(255), nullable=False)
+    current_stock = Column(Float, default=0.0)  # Track warehouse inventory
     created_at = Column(DateTime, default=datetime.utcnow)
 
     # Relationships
@@ -129,6 +130,26 @@ class Grievance(Base):
 
     def __repr__(self):
         return f"<Grievance {self.id}>"
+
+
+class Dispatch(Base):
+    """Model for tracking dispatch records from warehouse to shop"""
+    __tablename__ = 'dispatches'
+
+    id = Column(Integer, primary_key=True)
+    warehouse_id = Column(Integer, ForeignKey('warehouses.id'), nullable=False)
+    shop_id = Column(Integer, ForeignKey('shops.id'), nullable=False)
+    quantity = Column(Float, nullable=False)
+    dispatch_date = Column(DateTime, default=datetime.utcnow)
+    status = Column(String(20), default='completed')  # pending, completed, cancelled
+    notes = Column(String(500), nullable=True)
+
+    # Relationships
+    warehouse = relationship('Warehouse')
+    shop = relationship('Shop')
+
+    def __repr__(self):
+        return f"<Dispatch {self.id}>"
 
 
 class FraudAlert(Base):
