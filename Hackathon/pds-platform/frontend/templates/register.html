@@ -1,0 +1,202 @@
+{% extends "base.html" %}
+
+{% block title %}Register - PDS Platform{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-5 col-md-8">
+        <div class="card mt-5">
+            <div class="card-header text-center py-4">
+                <h3 class="mb-0">
+                    <i class="fas fa-user-plus"></i> Create Account
+                </h3>
+            </div>
+            <div class="card-body p-5">
+                <div id="errorAlert" class="alert alert-danger d-none" role="alert"></div>
+                <div id="successAlert" class="alert alert-success d-none" role="alert">
+                    Registration successful! Redirecting to dashboard...
+                </div>
+                <div id="loadingAlert" class="alert alert-info d-none" role="alert">
+                    <i class="fas fa-spinner fa-spin"></i> Creating account...
+                </div>
+                
+                <form id="registerForm">
+                    <div class="mb-3">
+                        <label for="name" class="form-label">
+                            <i class="fas fa-user"></i> Full Name
+                        </label>
+                        <input type="text" class="form-control" id="name" name="name" required>
+                        <small class="text-muted">Enter your complete name</small>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="unique_id" class="form-label">
+                            <i class="fas fa-id-card"></i> Aadhaar/Unique ID
+                        </label>
+                        <input type="text" class="form-control" id="unique_id" name="unique_id" required>
+                        <small class="text-muted">12-digit Aadhaar number or unique identifier</small>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="password" class="form-label">
+                            <i class="fas fa-key"></i> Password
+                        </label>
+                        <input type="password" class="form-control" id="password" name="password" required>
+                        <small class="text-muted">Minimum 6 characters recommended</small>
+                    </div>
+
+                    <div class="mb-4">
+                        <label for="role" class="form-label">
+                            <i class="fas fa-briefcase"></i> Account Type
+                        </label>
+                        <select class="form-select" id="role" name="role" required>
+                            <option value="">-- Select your role --</option>
+                            <option value="beneficiary">Beneficiary (Receive distribution)</option>
+                            <option value="shop">Shop Manager (Manage distribution point)</option>
+                            <option value="admin">Administrator (System admin)</option>
+                        </select>
+                        <small class="text-muted">Choose the appropriate role for your account</small>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary w-100 mb-3" id="registerBtn">
+                        <i class="fas fa-user-plus"></i> Create Account
+                    </button>
+                </form>
+
+                <hr class="my-4">
+
+                <p class="text-center text-muted">
+                    Already have an account? <a href="{{ url_for('frontend.login') }}">Login here</a>
+                </p>
+
+                <div class="alert alert-info" role="alert">
+                    <h6 class="alert-heading">Demo Accounts Available:</h6>
+                    <small>
+                        For testing, use these demo credentials on the login page:<br>
+                        <strong>Admin:</strong> ADMIN123456<br>
+                        <strong>Shop:</strong> SHOP000000<br>
+                        <strong>Beneficiary:</strong> BENEFICIARY000000
+                    </small>
+                </div>
+            </div>
+        </div>
+
+        <div class="card mt-3 bg-light">
+            <div class="card-body text-center text-muted">
+                <i class="fas fa-shield-alt"></i>
+                <p class="mb-0 mt-2">Your data is securely encrypted and protected</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    body {
+        display: flex;
+        flex-direction: column;
+        min-height: 100vh;
+    }
+    main {
+        flex: 1;
+    }
+
+    .form-select {
+        border: 1px solid #ced4da;
+    }
+
+    .form-select:focus {
+        border-color: #3498db;
+        box-shadow: 0 0 0 0.2rem rgba(52, 152, 219, 0.25);
+    }
+</style>
+
+<script>
+document.getElementById('registerForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    
+    const name = document.getElementById('name').value;
+    const unique_id = document.getElementById('unique_id').value;
+    const password = document.getElementById('password').value;
+    const role = document.getElementById('role').value;
+    
+    const errorAlert = document.getElementById('errorAlert');
+    const successAlert = document.getElementById('successAlert');
+    const loadingAlert = document.getElementById('loadingAlert');
+    const registerBtn = document.getElementById('registerBtn');
+    
+    // Validation
+    if (!name || !unique_id || !password || !role) {
+        errorAlert.textContent = 'Please fill in all fields';
+        errorAlert.classList.remove('d-none');
+        return;
+    }
+    
+    if (unique_id.length < 5) {
+        errorAlert.textContent = 'Unique ID must be at least 5 characters';
+        errorAlert.classList.remove('d-none');
+        return;
+    }
+    
+    if (password.length < 6) {
+        errorAlert.textContent = 'Password must be at least 6 characters';
+        errorAlert.classList.remove('d-none');
+        return;
+    }
+    
+    // Show loading
+    loadingAlert.classList.remove('d-none');
+    errorAlert.classList.add('d-none');
+    successAlert.classList.add('d-none');
+    registerBtn.disabled = true;
+    
+    try {
+        const response = await fetch('/api/auth/register', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                name: name,
+                unique_id: unique_id,
+                password: password,
+                role: role
+            })
+        });
+        
+        const data = await response.json();
+        
+        if (response.ok) {
+            // Store token
+            localStorage.setItem('token', data.token);
+            localStorage.setItem('user_id', data.user_id);
+            localStorage.setItem('role', data.role);
+            localStorage.setItem('name', name);
+            
+            // Show success
+            successAlert.classList.remove('d-none');
+            loadingAlert.classList.add('d-none');
+            
+            // Redirect after 2 seconds
+            setTimeout(() => {
+                if (data.role === 'admin') {
+                    window.location.href = '/admin';
+                } else if (data.role === 'shop') {
+                    window.location.href = '/shop';
+                } else {
+                    window.location.href = '/beneficiary';
+                }
+            }, 2000);
+        } else {
+            errorAlert.textContent = data.error || 'Registration failed. Please try again.';
+            errorAlert.classList.remove('d-none');
+        }
+    } catch (error) {
+        errorAlert.textContent = 'Error: ' + error.message;
+        errorAlert.classList.remove('d-none');
+    } finally {
+        loadingAlert.classList.add('d-none');
+        registerBtn.disabled = false;
+    }
+});
+</script>
+{% endblock %}
