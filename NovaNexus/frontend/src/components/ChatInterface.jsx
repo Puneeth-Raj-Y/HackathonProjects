@@ -47,9 +47,10 @@ const ChatInterface = ({ onAction }) => {
         onAction();
       }
     } catch (error) {
+      const errorMessage = error.response?.data?.detail || error.message || "Unknown connection error";
       setMessages(prev => [...prev, {
         id: Date.now() + 1,
-        text: "System Error: Connection to intelligence core failed.",
+        text: `System Error: Connection to intelligence core failed. [${errorMessage}]`,
         sender: 'ai',
         timestamp: new Date().toLocaleTimeString(),
         isError: true

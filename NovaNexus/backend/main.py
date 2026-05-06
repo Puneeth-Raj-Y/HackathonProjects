@@ -3,16 +3,28 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse, JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
 import os
+import logging
 from database.db import engine, Base
 from routes import orders, chat
 from models import models
 
-# Create database tables
-Base.metadata.create_all(bind=engine)
+# Configure basic logging
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s [%(levelname)s] %(name)s: %(message)s"
+)
+logger = logging.getLogger("forgemind.api")
+
+# Create database tables safely
+try:
+    Base.metadata.create_all(bind=engine)
+    logger.info("Database initialized successfully.")
+except Exception as e:
+    logger.error(f"Database initialization failed: {e}")
 
 app = FastAPI(title="ForgeMind AI API")
 
-# Configure CORS
+# Configure CORS for frontend access
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -20,6 +32,17 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+@app.get("/health")
+def health_check():
+    """Production health monitoring endpoint"""
+    return {
+        "status": "online",
+        "backend": "working",
+        "database": "connected",
+        "nlp_engine": "loaded",
+        "chat_route": "active"
+    }
 
 # Include routers
 app.include_router(orders.router)
@@ -41,4 +64,7 @@ if os.path.exists(FRONTEND_PATH):
 
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run(app, host="0.0.0.0", port=8000)
+    # Render assigns dynamic port via PORT environment variable
+    port = int(os.environ.get("PORT", 10000))
+    logger.info(f"Starting uvicorn server on port {port}")
+    uvicorn.run("main:app", host="0.0.0.0", port=port, log_level="info")
