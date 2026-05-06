@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}PDS Platform{% endblock %}</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=Manrope:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js"></script>
     <style>
@@ -14,11 +15,25 @@
             --success-color: #27ae60;
             --danger-color: #e74c3c;
             --warning-color: #f39c12;
+            --ink-900: #1e2328;
+            --ink-700: #2c3742;
+            --sand-50: #f6f1e9;
+            --sand-100: #efe6d8;
+            --emerald-600: #1f8a5b;
+            --emerald-700: #176845;
+            --saffron-500: #f5a623;
+            --clay-600: #b85f3a;
         }
 
         body {
             background-color: #ecf0f1;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            font-family: 'Manrope', sans-serif;
+            color: var(--ink-900);
+        }
+
+        h1, h2, h3, h4, .display-1, .display-2 {
+            font-family: 'DM Serif Display', serif;
+            letter-spacing: 0.2px;
         }
 
         .navbar {
@@ -148,10 +163,261 @@
             text-align: center;
             margin-top: 40px;
         }
+
+        .page-landing {
+            background: radial-gradient(circle at 10% 20%, #f4f0e6 0%, #e9e1d0 35%, #f6f1e9 100%);
+        }
+
+        .landing-hero {
+            background: linear-gradient(135deg, #1d3b2a 0%, #2e5a3f 50%, #4a7b52 100%);
+            color: #f7f3ea;
+            border-radius: 24px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .landing-hero::after {
+            content: "";
+            position: absolute;
+            inset: 0;
+            background: radial-gradient(circle at 80% 20%, rgba(245, 166, 35, 0.35), transparent 55%);
+            pointer-events: none;
+        }
+
+        .hero-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            background: rgba(255, 255, 255, 0.12);
+            border: 1px solid rgba(255, 255, 255, 0.25);
+            padding: 6px 14px;
+            border-radius: 999px;
+            font-size: 0.85rem;
+        }
+
+        .hero-stats {
+            background: rgba(255, 255, 255, 0.08);
+            border: 1px solid rgba(255, 255, 255, 0.18);
+            border-radius: 16px;
+            padding: 20px;
+        }
+
+        .hero-stats h3 {
+            font-size: 2rem;
+            margin-bottom: 4px;
+        }
+
+        .landing-card {
+            background: white;
+            border-radius: 20px;
+            padding: 24px;
+            box-shadow: 0 20px 40px rgba(25, 35, 45, 0.08);
+            height: 100%;
+        }
+
+        .landing-card .icon-bubble {
+            width: 46px;
+            height: 46px;
+            border-radius: 14px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            background: var(--sand-100);
+            color: var(--clay-600);
+            font-size: 1.2rem;
+        }
+
+        .step-card {
+            background: #ffffff;
+            border: 1px solid rgba(46, 90, 63, 0.12);
+            border-radius: 18px;
+            padding: 20px;
+            height: 100%;
+        }
+
+        .step-number {
+            font-weight: 700;
+            color: var(--emerald-700);
+            font-size: 1.1rem;
+        }
+
+        .page-auth {
+            background: linear-gradient(120deg, #f6f1e9 0%, #f2e8d7 45%, #f8f4ed 100%);
+        }
+
+        .auth-shell {
+            background: white;
+            border-radius: 24px;
+            box-shadow: 0 30px 60px rgba(27, 39, 51, 0.12);
+            overflow: hidden;
+        }
+
+        .auth-panel {
+            background: linear-gradient(140deg, #1f3b2b 0%, #2f5d41 55%, #4e7a53 100%);
+            color: #f7f3ea;
+            padding: 40px;
+            height: 100%;
+        }
+
+        .auth-panel p {
+            color: rgba(247, 243, 234, 0.85);
+        }
+
+        .auth-panel .chip {
+            display: inline-flex;
+            gap: 8px;
+            align-items: center;
+            padding: 6px 12px;
+            border-radius: 999px;
+            border: 1px solid rgba(247, 243, 234, 0.3);
+            font-size: 0.85rem;
+        }
+
+        .auth-form {
+            padding: 40px;
+        }
+
+        .auth-form .form-control,
+        .auth-form .form-select {
+            border-radius: 12px;
+            padding: 12px 14px;
+        }
+
+        .btn-brand {
+            background: var(--emerald-600);
+            border: none;
+            color: white;
+            padding: 12px 18px;
+            border-radius: 12px;
+            font-weight: 600;
+        }
+
+        .btn-brand:hover {
+            background: var(--emerald-700);
+            color: white;
+        }
+
+        .btn-outline-brand {
+            border: 1px solid rgba(255, 255, 255, 0.4);
+            color: white;
+            border-radius: 12px;
+            padding: 10px 16px;
+        }
+
+        .btn-outline-brand:hover {
+            background: rgba(255, 255, 255, 0.15);
+            color: white;
+        }
+
+        .fade-in-up {
+            animation: fadeUp 0.8s ease both;
+        }
+
+        .fade-in-up.delay-1 {
+            animation-delay: 0.15s;
+        }
+
+        .fade-in-up.delay-2 {
+            animation-delay: 0.3s;
+        }
+
+        .fade-in-up.delay-3 {
+            animation-delay: 0.45s;
+        }
+
+        .lift-card {
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .lift-card:hover {
+            transform: translateY(-6px);
+            box-shadow: 0 30px 60px rgba(24, 33, 42, 0.18);
+        }
+
+        .soft-glow {
+            position: relative;
+            isolation: isolate;
+        }
+
+        .soft-glow::before {
+            content: "";
+            position: absolute;
+            inset: -40px;
+            background: radial-gradient(circle at 30% 20%, rgba(245, 166, 35, 0.25), transparent 60%);
+            z-index: -1;
+        }
+
+        .floaty {
+            animation: floatUp 6s ease-in-out infinite;
+        }
+
+        .floaty.delay-1 {
+            animation-delay: 1s;
+        }
+
+        .floaty.delay-2 {
+            animation-delay: 2s;
+        }
+
+        .status-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 6px 14px;
+            border-radius: 999px;
+            font-size: 0.85rem;
+            background: rgba(255, 255, 255, 0.18);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+        }
+
+        .status-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: #d1d5db;
+            box-shadow: 0 0 0 0 rgba(255, 255, 255, 0.4);
+            animation: pulse 2s infinite;
+        }
+
+        .status-dot.online {
+            background: #22c55e;
+        }
+
+        .status-dot.offline {
+            background: #ef4444;
+        }
+
+        @keyframes fadeUp {
+            from { opacity: 0; transform: translateY(18px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes floatUp {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+
+        @keyframes pulse {
+            0% { box-shadow: 0 0 0 0 rgba(255, 255, 255, 0.35); }
+            70% { box-shadow: 0 0 0 10px rgba(255, 255, 255, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(255, 255, 255, 0); }
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            .fade-in-up,
+            .floaty,
+            .status-dot {
+                animation: none;
+            }
+
+            .lift-card {
+                transition: none;
+            }
+        }
     </style>
     {% block extra_css %}{% endblock %}
 </head>
-<body>
+<body class="{% block body_class %}{% endblock %}">
     <nav class="navbar navbar-expand-lg navbar-dark">
         <div class="container-fluid">
             <a class="navbar-brand" href="/">

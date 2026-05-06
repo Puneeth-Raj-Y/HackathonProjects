@@ -1,0 +1,170 @@
+{% extends "base.html" %}
+
+{% block title %}PDS Platform - Intelligent Distribution{% endblock %}
+
+{% block body_class %}page-landing{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="landing-hero p-4 p-lg-5 mb-5 fade-in-up soft-glow">
+        <div class="row align-items-center">
+            <div class="col-lg-7">
+                <div class="d-flex flex-wrap align-items-center gap-3 mb-3">
+                    <span class="hero-badge"><i class="fas fa-shield-alt"></i> Trusted, auditable, and real-time</span>
+                    <span class="status-pill">
+                        <span id="apiStatusDot" class="status-dot"></span>
+                        <span id="apiStatusText">Connecting...</span>
+                    </span>
+                </div>
+                <h1 class="display-5 mb-3">Intelligent Public Distribution for a fair, transparent supply chain</h1>
+                <p class="lead mb-4">Monitor stock, detect fraud, and serve beneficiaries with confidence. Built for administrators, shop managers, and communities.</p>
+                <div class="d-flex flex-wrap gap-3">
+                    <a class="btn btn-brand" href="{{ url_for('frontend.login') }}">Sign in to dashboard</a>
+                    <a class="btn btn-outline-brand" href="{{ url_for('frontend.register') }}">Create an account</a>
+                </div>
+                <div class="mt-4 d-flex flex-wrap gap-4">
+                    <div class="hero-stats floaty">
+                        <h3>24/7</h3>
+                        <p class="mb-0">Fraud monitoring</p>
+                    </div>
+                    <div class="hero-stats floaty delay-1">
+                        <h3>3-Tier</h3>
+                        <p class="mb-0">Warehouse to beneficiary</p>
+                    </div>
+                    <div class="hero-stats floaty delay-2">
+                        <h3>ML</h3>
+                        <p class="mb-0">Anomaly detection</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-5 mt-4 mt-lg-0">
+                <div class="landing-card lift-card">
+                    <div class="icon-bubble mb-3"><i class="fas fa-warehouse"></i></div>
+                    <h4 class="mb-2">End-to-end supply visibility</h4>
+                    <p class="text-muted">Track every dispatch, distribution, and grievance. Keep stock consistent and beneficiaries informed.</p>
+                    <hr>
+                    <div class="d-flex align-items-center gap-3">
+                        <div class="icon-bubble"><i class="fas fa-chart-line"></i></div>
+                        <div>
+                            <p class="mb-1 fw-semibold">Live risk insights</p>
+                            <small class="text-muted">Isolation Forest + rule checks</small>
+                        </div>
+                    </div>
+                    <div class="d-flex align-items-center gap-3 mt-3">
+                        <div class="icon-bubble"><i class="fas fa-users"></i></div>
+                        <div>
+                            <p class="mb-1 fw-semibold">Beneficiary-first UI</p>
+                            <small class="text-muted">Quota, history, and support</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row mb-5 fade-in-up delay-1">
+        <div class="col-12">
+            <div class="landing-card lift-card">
+                <div class="row align-items-center">
+                    <div class="col-lg-8">
+                        <h3 class="mb-2">Designed for public accountability</h3>
+                        <p class="text-muted mb-0">Every kilogram is traceable, every transaction is logged, and every anomaly is flagged for review.</p>
+                    </div>
+                    <div class="col-lg-4 text-lg-end mt-3 mt-lg-0">
+                        <span class="hero-badge" style="color: var(--ink-900); background: var(--sand-100); border-color: rgba(0,0,0,0.08);">
+                            <i class="fas fa-award"></i> Audit-ready workflows
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row mb-4 fade-in-up delay-2">
+        <div class="col-12">
+            <h2 class="mb-4">How it works</h2>
+        </div>
+        <div class="col-lg-4">
+            <div class="step-card lift-card">
+                <div class="step-number">01</div>
+                <h5 class="mt-2">Warehouse intake</h5>
+                <p class="text-muted">Admins log incoming stock. Inventory updates instantly and feeds the dispatch planner.</p>
+            </div>
+        </div>
+        <div class="col-lg-4 mt-3 mt-lg-0">
+            <div class="step-card lift-card">
+                <div class="step-number">02</div>
+                <h5 class="mt-2">Shop distribution</h5>
+                <p class="text-muted">Shops receive dispatches, distribute goods, and update stock in real time.</p>
+            </div>
+        </div>
+        <div class="col-lg-4 mt-3 mt-lg-0">
+            <div class="step-card lift-card">
+                <div class="step-number">03</div>
+                <h5 class="mt-2">Fraud prevention</h5>
+                <p class="text-muted">Rules and ML models flag suspicious activity and create alerts for admins.</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="row mb-5 fade-in-up delay-3">
+        <div class="col-12">
+            <h2 class="mb-4">Built for every stakeholder</h2>
+        </div>
+        <div class="col-lg-4">
+            <div class="landing-card lift-card">
+                <div class="icon-bubble mb-3"><i class="fas fa-user-shield"></i></div>
+                <h5>Administrators</h5>
+                <p class="text-muted">Monitor fraud, manage warehouses, and keep the system compliant.</p>
+            </div>
+        </div>
+        <div class="col-lg-4 mt-3 mt-lg-0">
+            <div class="landing-card lift-card">
+                <div class="icon-bubble mb-3"><i class="fas fa-store"></i></div>
+                <h5>Shop managers</h5>
+                <p class="text-muted">Track inventory, distribute rations, and get alerts before issues escalate.</p>
+            </div>
+        </div>
+        <div class="col-lg-4 mt-3 mt-lg-0">
+            <div class="landing-card lift-card">
+                <div class="icon-bubble mb-3"><i class="fas fa-hands-helping"></i></div>
+                <h5>Beneficiaries</h5>
+                <p class="text-muted">View quotas, receive updates, and raise grievances with transparency.</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="row mb-4 fade-in-up delay-2">
+        <div class="col-12">
+            <div class="landing-hero p-4 p-lg-5">
+                <div class="row align-items-center">
+                    <div class="col-lg-8">
+                        <h2 class="mb-3">Ready to modernize your distribution?</h2>
+                        <p class="mb-0">Sign in to explore dashboards or create an account to experience real-time controls.</p>
+                    </div>
+                    <div class="col-lg-4 text-lg-end mt-3 mt-lg-0">
+                        <a class="btn btn-brand me-2" href="{{ url_for('frontend.login') }}">Get started</a>
+                        <a class="btn btn-outline-brand" href="{{ url_for('frontend.register') }}">Register</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    const apiStatusDot = document.getElementById('apiStatusDot');
+    const apiStatusText = document.getElementById('apiStatusText');
+
+    fetch('/api/health')
+        .then((response) => response.json())
+        .then((data) => {
+            apiStatusDot.classList.add('online');
+            apiStatusText.textContent = data.message ? 'API online' : 'API online';
+        })
+        .catch(() => {
+            apiStatusDot.classList.add('offline');
+            apiStatusText.textContent = 'API offline';
+        });
+</script>
+{% endblock %}
