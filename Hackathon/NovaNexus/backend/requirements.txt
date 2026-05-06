@@ -1,0 +1,8 @@
+fastapi
+uvicorn
+sqlalchemy
+pydantic
+spacy
+python-dateutil
+python-multipart
+cors
