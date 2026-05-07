@@ -1,10 +1,13 @@
-import axios from 'axios';
+import axios from "axios";
 
-// Use environment variable for production API, default to localhost for development
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:10000/api';
+const API_URL =
+  import.meta.env.VITE_API_URL || "https://forgemind-ai.onrender.com";
 
 const api = axios.create({
   baseURL: API_URL,
+  headers: {
+    "Content-Type": "application/json",
+  },
 });
 
 export default api;
