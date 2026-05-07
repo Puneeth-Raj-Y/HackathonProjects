@@ -1,0 +1,41 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  color-scheme: dark;
+  font-family: 'Space Grotesk', system-ui, sans-serif;
+  background: #050816;
+}
+
+html,
+body,
+#root {
+  min-height: 100%;
+  margin: 0;
+  background: #050816;
+}
+
+body {
+  @apply bg-[#050816] text-white antialiased;
+  background-image:
+    radial-gradient(circle at top left, rgba(79, 209, 255, 0.15), transparent 30%),
+    radial-gradient(circle at bottom right, rgba(236, 72, 153, 0.12), transparent 28%),
+    linear-gradient(135deg, rgba(255, 255, 255, 0.03), transparent 50%);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+::selection {
+  background: rgba(79, 209, 255, 0.3);
+  color: white;
+}
+
+@layer components {
+  .bg-grid-faint {
+    background-image: linear-gradient(rgba(148, 163, 184, 0.08) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(148, 163, 184, 0.08) 1px, transparent 1px);
+  }
+}
