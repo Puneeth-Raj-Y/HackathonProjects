@@ -33,20 +33,46 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-@app.get("/health")
+@app.get("/api/health")
 def health_check():
     """Production health monitoring endpoint"""
+    db_status = "connected"
+    try:
+        from sqlalchemy import text
+        with engine.connect() as conn:
+            conn.execute(text("SELECT 1"))
+    except Exception as e:
+        logger.error(f"Database health check failed: {e}")
+        db_status = "failed"
+
+    from nlp.engine import nlp
+    nlp_status = "loaded" if nlp is not None else "failed"
+
     return {
         "status": "online",
-        "backend": "working",
-        "database": "connected",
-        "nlp_engine": "loaded",
-        "chat_route": "active"
+        "backend": "stable",
+        "database": db_status,
+        "nlp_engine": nlp_status,
+        "api_routes": "working"
     }
 
 # Include routers
 app.include_router(orders.router)
 app.include_router(chat.router)
+
+# Mount frontend static files safely
+dist_path = os.path.join(os.getcwd(), "frontend", "dist")
+if os.path.exists(dist_path):
+    logger.info(f"Mounting static files from {dist_path}")
+    app.mount("/", StaticFiles(directory=dist_path, html=True), name="static")
+else:
+    logger.warning(f"Static directory {dist_path} not found. Frontend skipped.")
+
+@app.get("/{full_path:path}")
+async def serve_frontend(full_path: str):
+    if os.path.exists(dist_path):
+        return FileResponse(os.path.join(dist_path, "index.html"))
+    return JSONResponse({"error": "Frontend build not found"}, status_code=404)
 
 # Mount frontend
 FRONTEND_PATH = os.path.join(os.path.dirname(os.path.dirname(__file__)), "frontend", "dist")

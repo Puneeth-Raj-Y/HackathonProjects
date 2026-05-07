@@ -1,7 +1,6 @@
 import spacy
 import re
 from datetime import datetime
-from routes import orders,chat
 import os
 import logging
 
@@ -9,12 +8,11 @@ logger = logging.getLogger("forgemind.nlp")
 
 try:
     nlp = spacy.load("en_core_web_sm")
-    logger.info("Loaded existing spaCy model.")
-except OSError:
-    logger.warning("spaCy model not found. Downloading 'en_core_web_sm'...")
-    os.system("python -m spacy download en_core_web_sm")
-    nlp = spacy.load("en_core_web_sm")
-    logger.info("Successfully downloaded and loaded spaCy model.")
+    logger.info("Loaded spaCy model successfully.")
+except Exception as e:
+    logger.error(f"spaCy load failed: {e}")
+    # Fallback to None, engine will handle it
+    nlp = None
 
 class HybridNLPEngine:
     def __init__(self):
