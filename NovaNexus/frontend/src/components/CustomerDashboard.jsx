@@ -12,8 +12,8 @@ const CustomerDashboard = ({ orders, stats, loading, search, setSearch, onRefres
     <div className="space-y-8">
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
         {[
-          { label: 'My Orders', value: stats.total || 0, icon: Box, color: 'text-primary' },
-          { label: 'Active', value: stats.active || 0, icon: Activity, color: 'text-warning' },
+          { label: 'My Orders', value: stats.total_orders || 0, icon: Box, color: 'text-primary' },
+          { label: 'Active', value: (stats.pending + stats.processing) || 0, icon: Activity, color: 'text-warning' },
           { label: 'Delivered', value: stats.completed || 0, icon: ShieldCheck, color: 'text-success' },
           { label: 'Avg Lead Time', value: '4.2 Days', icon: Clock, color: 'text-slate-400' },
         ].map((stat, i) => (
