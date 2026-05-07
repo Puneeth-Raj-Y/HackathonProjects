@@ -13,9 +13,9 @@ router = APIRouter(prefix="/api/chat", tags=["chat"])
 def handle_chat(request: schemas.ChatRequest, db: Session = Depends(get_db)):
     try:
         text = request.message
-        logger.info(f"Received chat request from user {request.user_id}: {text[:50]}...")
+        logger.info(f"REQUEST [CHAT]: User {request.user_id} - '{text[:100]}'")
         intent = nlp_engine.classify_intent(text)
-        logger.info(f"Classified intent: {intent}")
+        logger.info(f"NLP [INTENT]: {intent}")
         
         reply = "I'm sorry, I couldn't process that. Try: 'Need 10 laptops and 5 chairs by Friday'."
         extracted_data = {}

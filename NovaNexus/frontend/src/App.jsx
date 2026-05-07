@@ -21,17 +21,19 @@ function App() {
     try {
       setLoading(true);
       const params = user.role === 'customer' ? { user_id: user.id } : {};
-      const statsUrl = '/orders/analytics/summary';
+      const statsUrl = '/api/orders/analytics/summary';
       
       const [ordersRes, statsRes] = await Promise.all([
-        api.get('/orders/', { params }),
+        api.get('/api/orders/', { params }),
         api.get(statsUrl)
       ]);
       
       setOrders(ordersRes.data);
       setStats(statsRes.data);
     } catch (error) {
-      toast.error("Cloud synchronization failed.");
+      console.error("Fetch Data Error:", error);
+      const errorMsg = error.response?.data?.detail || error.message || "Cloud synchronization failed.";
+      toast.error(`Sync Failed: ${errorMsg}`);
     } finally {
       setLoading(false);
     }
@@ -52,20 +54,22 @@ function App() {
 
   const handleUpdateStatus = async (orderId, newStatus) => {
     try {
-      await api.patch(`/orders/${orderId}/status`, null, { params: { status: newStatus } });
+      await api.patch(`/api/orders/${orderId}/status`, null, { params: { status: newStatus } });
       toast.success(`Order #${orderId} set to ${newStatus}`);
       fetchData();
     } catch (error) {
+      console.error("Update Status Error:", error);
       toast.error("Failed to update status.");
     }
   };
 
   const handleAddQualityLog = async (orderId, note) => {
     try {
-      await api.post(`/orders/${orderId}/quality`, null, { params: { note } });
+      await api.post(`/api/orders/${orderId}/quality`, null, { params: { note } });
       toast.success(`Quality log added to Order #${orderId}`);
       fetchData();
     } catch (error) {
+      console.error("Add Quality Log Error:", error);
       toast.error("Failed to add quality log.");
     }
   };

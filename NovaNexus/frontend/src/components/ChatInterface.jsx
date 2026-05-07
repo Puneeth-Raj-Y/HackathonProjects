@@ -31,10 +31,7 @@ const ChatInterface = ({ onAction }) => {
     setIsTyping(true);
 
     try {
-      const response = await api.post('/api/chat/', {
-  message: userMsg.text,
-  user_id: 1
-});
+      const response = await api.post('/api/chat/', { message: userMsg.text, user_id: 1 });
       
       const aiMsg = {
         id: Date.now() + 1,
