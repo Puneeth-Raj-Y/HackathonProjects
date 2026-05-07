@@ -19,6 +19,25 @@ def get_orders(user_id: int = None, status: str = None, db: Session = Depends(ge
         query = query.filter(models.Order.status == status)
     return query.all()
 
+@router.get("/analytics/summary")
+def get_admin_stats(db: Session = Depends(get_db)):
+    logger.info("REQUEST [GET STATS]: Fetching analytics summary")
+    total_orders = db.query(models.Order).count()
+    pending = db.query(models.Order).filter(models.Order.status == "Pending").count()
+    processing = db.query(models.Order).filter(models.Order.status == "Processing").count()
+    completed = db.query(models.Order).filter(models.Order.status == "Completed").count()
+    total_users = db.query(models.User).count()
+    
+    logger.info(f"Analytics: total={total_orders}, pending={pending}, processing={processing}, completed={completed}, users={total_users}")
+    
+    return {
+        "total_orders": total_orders,
+        "pending": pending,
+        "processing": processing,
+        "completed": completed,
+        "total_users": total_users
+    }
+
 @router.get("/{order_id}", response_model=schemas.OrderSchema)
 def get_order(order_id: int, db: Session = Depends(get_db)):
     order = db.query(models.Order).filter(models.Order.id == order_id).first()
@@ -44,20 +63,3 @@ def add_quality_log(order_id: int, note: str, db: Session = Depends(get_db)):
     db.add(new_log)
     db.commit()
     return {"message": "Quality log added", "order_id": order_id}
-
-@router.get("/analytics/summary")
-def get_admin_stats(db: Session = Depends(get_db)):
-    logger.info("REQUEST [GET STATS]: Fetching analytics summary")
-    total_orders = db.query(models.Order).count()
-    pending = db.query(models.Order).filter(models.Order.status == "Pending").count()
-    processing = db.query(models.Order).filter(models.Order.status == "Processing").count()
-    completed = db.query(models.Order).filter(models.Order.status == "Completed").count()
-    total_users = db.query(models.User).count()
-    
-    return {
-        "total_orders": total_orders,
-        "pending": pending,
-        "processing": processing,
-        "completed": completed,
-        "total_users": total_users
-    }
