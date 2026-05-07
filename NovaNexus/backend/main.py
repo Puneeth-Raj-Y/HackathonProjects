@@ -3,28 +3,55 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse, JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
 import os
+import sys
 import logging
-from database.db import engine, Base
-from routes import orders, chat
-from models import models
+from pathlib import Path
 
-# Configure basic logging
+# Configure logging FIRST
 logging.basicConfig(
     level=logging.INFO,
     format="%(asctime)s [%(levelname)s] %(name)s: %(message)s"
 )
 logger = logging.getLogger("forgemind.api")
 
-# Create database tables safely
+logger.info("=" * 80)
+logger.info("STARTING FORGEMIND AI API INITIALIZATION")
+logger.info("=" * 80)
+
+# Initialize database
 try:
+    from database.db import engine, Base
+    logger.info("Database module imported successfully")
     Base.metadata.create_all(bind=engine)
-    logger.info("Database initialized successfully.")
+    logger.info("✓ Database initialized successfully")
 except Exception as e:
-    logger.error(f"Database initialization failed: {e}")
+    logger.error(f"✗ Database initialization failed: {e}", exc_info=True)
+    sys.exit(1)
 
-app = FastAPI(title="ForgeMind AI API")
+# Initialize NLP engine
+try:
+    from nlp.engine import nlp_engine
+    logger.info("✓ NLP engine initialized successfully")
+except Exception as e:
+    logger.error(f"✗ NLP engine initialization failed: {e}", exc_info=True)
+    logger.warning("Continuing without NLP engine (fallback mode)")
 
-# Configure CORS for frontend access
+# Import routers after dependencies are initialized
+try:
+    from routes import orders, chat
+    logger.info("✓ API routes imported successfully")
+except Exception as e:
+    logger.error(f"✗ Failed to import routes: {e}", exc_info=True)
+    sys.exit(1)
+
+# Create FastAPI application
+app = FastAPI(
+    title="ForgeMind AI API",
+    description="AI-powered enterprise workflow platform",
+    version="1.0.0"
+)
+
+# Configure CORS middleware
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -32,21 +59,28 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+logger.info("✓ CORS middleware configured")
 
+# Include routers
+app.include_router(orders.router)
+app.include_router(chat.router)
+logger.info("✓ API routers included")
+
+# Health check endpoint
 @app.get("/api/health")
 def health_check():
     """Production health monitoring endpoint"""
-    db_status = "connected"
     try:
         from sqlalchemy import text
         with engine.connect() as conn:
             conn.execute(text("SELECT 1"))
+        db_status = "connected"
     except Exception as e:
         logger.error(f"Database health check failed: {e}")
         db_status = "failed"
 
     from nlp.engine import nlp
-    nlp_status = "loaded" if nlp is not None else "failed"
+    nlp_status = "loaded" if nlp is not None else "not_loaded"
 
     return {
         "status": "online",
@@ -56,41 +90,44 @@ def health_check():
         "api_routes": "working"
     }
 
-# Include routers
-app.include_router(orders.router)
-app.include_router(chat.router)
+# Frontend serving
+BASE_DIR = Path(__file__).resolve().parent.parent
+FRONTEND_DIST = BASE_DIR / "frontend" / "dist"
 
-# Mount frontend static files safely
-dist_path = os.path.join(os.getcwd(), "frontend", "dist")
-if os.path.exists(dist_path):
-    logger.info(f"Mounting static files from {dist_path}")
-    app.mount("/", StaticFiles(directory=dist_path, html=True), name="static")
-else:
-    logger.warning(f"Static directory {dist_path} not found. Frontend skipped.")
-
-@app.get("/{full_path:path}")
-async def serve_frontend(full_path: str):
-    if os.path.exists(dist_path):
-        return FileResponse(os.path.join(dist_path, "index.html"))
-    return JSONResponse({"error": "Frontend build not found"}, status_code=404)
-
-# Mount frontend
-FRONTEND_PATH = os.path.join(os.path.dirname(os.path.dirname(__file__)), "frontend", "dist")
-
-if os.path.exists(FRONTEND_PATH):
-    app.mount("/assets", StaticFiles(directory=os.path.join(FRONTEND_PATH, "assets")), name="assets")
-
+if FRONTEND_DIST.exists():
+    logger.info(f"✓ Frontend build found at {FRONTEND_DIST}")
+    
+    # Mount assets
+    assets_dir = FRONTEND_DIST / "assets"
+    if assets_dir.exists():
+        app.mount("/assets", StaticFiles(directory=str(assets_dir)), name="assets")
+        logger.info("✓ Assets mounted")
+    
+    # SPA fallback route
     @app.get("/{full_path:path}")
-    async def serve_frontend(full_path: str):
+    async def serve_spa(full_path: str):
+        """Serve SPA with fallback to index.html"""
+        # Don't intercept API calls
         if full_path.startswith("api/"):
-            return JSONResponse(status_code=404, content={"message": "API Not Found"})
-        if os.path.exists(os.path.join(FRONTEND_PATH, full_path)) and full_path != "":
-            return FileResponse(os.path.join(FRONTEND_PATH, full_path))
-        return FileResponse(os.path.join(FRONTEND_PATH, "index.html"))
+            return JSONResponse({"error": "Not Found"}, status_code=404)
+        
+        # Try to serve static file
+        file_path = FRONTEND_DIST / full_path
+        if file_path.exists() and file_path.is_file() and full_path:
+            return FileResponse(str(file_path))
+        
+        # Fallback to index.html for SPA routing
+        return FileResponse(str(FRONTEND_DIST / "index.html"))
+else:
+    logger.warning(f"Frontend build not found at {FRONTEND_DIST}")
+    logger.warning("API will be available but frontend will not be served")
+
+logger.info("=" * 80)
+logger.info("INITIALIZATION COMPLETE - API READY")
+logger.info("=" * 80)
 
 if __name__ == "__main__":
     import uvicorn
-    # Render assigns dynamic port via PORT environment variable
     port = int(os.environ.get("PORT", 10000))
-    logger.info(f"Starting uvicorn server on port {port}")
+    logger.info(f"Starting server on port {port}")
     uvicorn.run("main:app", host="0.0.0.0", port=port, log_level="info")
